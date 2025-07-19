@@ -596,7 +596,7 @@
                 setTimeout(() => this.showMainMenu(), 1500);
             }
             
-           showDocumentsInfo() {
+            showDocumentsInfo() {
     this.addMessage(
         '📋 Documentos necessários:\n\n' +
         '1. Relatório médico detalhado\n' +
@@ -675,9 +675,37 @@ showInsuranceInfo() {
     
     setTimeout(() => this.showMainMenu(), 2000);
 }
-    
-    setTimeout(() => this.showMainMenu(), 2000);
-}
+            
+            showSurgeryTypesInfo() {
+                this.addMessage(
+                    '🔬 Tipos de cirurgia: \n\n' +
+                    '•Bypass Gástrico - mais comum \n' +
+                    '•Sleeve (Manga Gástrica) \n' +
+                    '•Banda Gástrica \n' +
+                    '• **Duodenal Switch \n\n' +
+                    'A escolha da técnica deve ser discutida com o cirurgião, que conhecerá seu caso e indicará a mais adequada! 👩‍⚕️',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            showInsuranceInfo() {
+                this.addMessage(
+                    '🏛️ **SUS/Plano de Saúde:**\n\n' +
+                    '**Pelo SUS:**\n' +
+                    '• Procure uma UBS para encaminhamento\n' +
+                    '• Tenha paciência com a fila de espera\n\n' +
+                    '**Pelo Plano:**\n' +
+                    '• Verifique se tem cobertura\n' +
+                    '• Reúna documentos exigidos\n' +
+                    '• Solicite autorização prévia\n\n' +
+                    'Cada caso tem suas particularidades!',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
             
             async sendMessage() {
                 const message = this.chatInput.value.trim();
@@ -836,7 +864,7 @@ showInsuranceInfo() {
                     const imcCategory = this.getIMCCategory(imc);
                     const ansInfo = this.getANSInfo(imc);
                     
-                  this.addMessage(
+                    this.addMessage(
                         `${name}, seu IMC é ${imc.toFixed(1)} (${imcCategory}). ${ansInfo}`,
                         'assistant'
                     );
@@ -880,15 +908,6 @@ showInsuranceInfo() {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message', type);
                 messageDiv.textContent = text;
-                
-                this.chatMessages.appendChild(messageDiv);
-                this.scrollToBottom();
-            }
-            
-            addMessageHTML(html, type = 'assistant') {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', type);
-                messageDiv.innerHTML = html;
                 
                 this.chatMessages.appendChild(messageDiv);
                 this.scrollToBottom();
