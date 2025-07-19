@@ -596,16 +596,14 @@
                 setTimeout(() => this.showMainMenu(), 1500);
             }
             
-            showDocumentsInfo() {
+           showDocumentsInfo() {
     this.addMessage(
-        '📋 Documentos necessários:<br><br>' +
-        '<ul>' +
-        '<li>Relatório médico detalhado</li>' +
-        '<li>Exames solicitados pela equipe</li>' +
-        '<li>Comprovação de tentativas anteriores de emagrecimento</li>' +
-        '<li>Avaliações psicológica e nutricional</li>' +
-        '<li>Histórico médico completo</li>' +
-        '</ul>' +
+        '📋 Documentos necessários:\n\n' +
+        '1. Relatório médico detalhado\n' +
+        '2. Exames solicitados pela equipe\n' +
+        '3. Comprovação de tentativas anteriores de emagrecimento\n' +
+        '4. Avaliações psicológica e nutricional\n' +
+        '5. Histórico médico completo\n\n' +
         'Cada equipe pode ter exigências específicas!',
         'assistant'
     );
@@ -615,14 +613,12 @@
 
 showPreOpInfo() {
     this.addMessage(
-        '🏥 Pré-operatório:<br><br>' +
-        '<ul>' +
-        '<li>Seguir orientações médicas rigorosamente</li>' +
-        '<li>Realizar todos os exames solicitados</li>' +
-        '<li>Participar de consultas multidisciplinares</li>' +
-        '<li>Manter acompanhamento psicológico</li>' +
-        '<li>Preparar-se mentalmente para mudanças</li>' +
-        '</ul>' +
+        '🏥 Pré-operatório:\n\n' +
+        '1. Seguir orientações médicas rigorosamente\n' +
+        '2. Realizar todos os exames solicitados\n' +
+        '3. Participar de consultas multidisciplinares\n' +
+        '4. Manter acompanhamento psicológico\n' +
+        '5. Preparar-se mentalmente para mudanças\n\n' +
         'É uma fase importante de preparação!',
         'assistant'
     );
@@ -632,14 +628,12 @@ showPreOpInfo() {
 
 showPostOpInfo() {
     this.addMessage(
-        '💪 Pós-operatório:<br><br>' +
-        '<ul>' +
-        '<li>Seguir uma dieta orientada pelo nutricionista</li>' +
-        '<li>Tomar vitaminas prescritas</li>' +
-        '<li>Fazer exercícios conforme liberação</li>' +
-        '<li>Manter consultas regulares</li>' +
-        '<li>Participar de grupos de apoio</li>' +
-        '</ul>' +
+        '💪 Pós-operatório:\n\n' +
+        '1. Seguir uma dieta orientada pelo nutricionista\n' +
+        '2. Tomar vitaminas prescritas\n' +
+        '3. Fazer exercícios conforme liberação\n' +
+        '4. Manter consultas regulares\n' +
+        '5. Participar de grupos de apoio\n\n' +
         'Seu comprometimento é fundamental para o sucesso! 🌟',
         'assistant'
     );
@@ -649,13 +643,11 @@ showPostOpInfo() {
 
 showSurgeryTypesInfo() {
     this.addMessage(
-        '🔬 Tipos de cirurgia:<br><br>' +
-        '<ul>' +
-        '<li>Bypass Gástrico - mais comum</li>' +
-        '<li>Sleeve (Manga Gástrica)</li>' +
-        '<li>Banda Gástrica</li>' +
-        '<li>Duodenal Switch</li>' +
-        '</ul>' +
+        '🔬 Tipos de cirurgia:\n\n' +
+        '1. Bypass Gástrico - mais comum\n' +
+        '2. Sleeve (Manga Gástrica)\n' +
+        '3. Banda Gástrica\n' +
+        '4. Duodenal Switch\n\n' +
         'A escolha da técnica deve ser discutida com o cirurgião, que conhecerá seu caso e indicará a mais adequada! 👩‍⚕️',
         'assistant'
     );
@@ -680,6 +672,9 @@ showInsuranceInfo() {
         'Cada caso tem suas particularidades!',
         'assistant'
     );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
     
     setTimeout(() => this.showMainMenu(), 2000);
 }
