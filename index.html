@@ -829,7 +829,7 @@
                     const imcCategory = this.getIMCCategory(imc);
                     const ansInfo = this.getANSInfo(imc);
                     
-                   this.addMessage(
+                  this.addMessage(
                         `${name}, seu IMC é ${imc.toFixed(1)} (${imcCategory}). ${ansInfo}`,
                         'assistant'
                     );
@@ -873,6 +873,15 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message', type);
                 messageDiv.textContent = text;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            addMessageHTML(html, type = 'assistant') {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', type);
+                messageDiv.innerHTML = html;
                 
                 this.chatMessages.appendChild(messageDiv);
                 this.scrollToBottom();
