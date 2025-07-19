@@ -304,32 +304,13 @@
             background: rgba(76, 175, 80, 0.9);
         }
 
-        .api-key-setup {
+        .loading-message {
             background: rgba(255, 255, 255, 0.95);
             color: #333;
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 20px;
             text-align: center;
-        }
-
-        .api-key-setup input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .api-key-setup button {
-            background: #2a5298;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
         }
 
         /* Scrollbar */
@@ -384,7 +365,7 @@
     </style>
 </head>
 <body>
-    <div class="ai-status" id="aiStatus">🤖 Configurando...</div>
+    <div class="ai-status" id="aiStatus">🤖 Inicializando...</div>
 
     <div class="container">
         <div class="left-section">
@@ -404,15 +385,9 @@
             
             <div class="chat-container">
                 <div class="chat-messages" id="chatMessages">
-                    <div id="apiKeySetup" class="api-key-setup">
-                        <h3>🔑 Configuração da API</h3>
-                        <p>Para usar a BarIA, você precisa inserir sua chave da API do GroqCloud:</p>
-                        <input type="password" id="apiKeyInput" placeholder="Sua chave da API do GroqCloud">
-                        <br>
-                        <button onclick="setupAPI()">Configurar</button>
-                        <p style="font-size: 12px; margin-top: 10px; color: #666;">
-                            Obtenha sua chave gratuita em: <a href="https://console.groq.com" target="_blank">console.groq.com</a>
-                        </p>
+                    <div class="loading-message">
+                        <h3>🚀 Carregando BarIA...</h3>
+                        <p>Configurando sua assistente inteligente...</p>
                     </div>
                 </div>
                 
@@ -429,7 +404,7 @@
                         type="text" 
                         class="chat-input" 
                         id="chatInput" 
-                        placeholder="Digite sua pergunta sobre cirurgia bariátrica..."
+                        placeholder="Aguarde a inicialização..."
                         maxlength="500"
                         disabled
                     >
@@ -476,181 +451,65 @@ Seja sempre clara, precisa e empática nas respostas.`;
                 this.init();
             }
             
-            init() {
+            async init() {
+                // Tenta carregar a API key das variáveis de ambiente do Netlify
+                await this.loadAPIKey();
                 this.setupEventListeners();
             }
             
-            setupEventListeners() {
-                this.sendButton.addEventListener('click', () => this.sendMessage());
-                this.chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !this.sendButton.disabled) {
-                        e.preventDefault();
-                        this.sendMessage();
+            async loadAPIKey() {
+                try {
+                    // Tenta carregar através da função Netlify que acessa as variáveis de ambiente
+                    const response = await fetch('/.netlify/functions/api-proxy', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'get-key'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.apiKey = data.apiKey;
+                        this.initializeChat();
+                    } else {
+                        throw new Error('Erro ao obter API key');
                     }
-                });
-                
-                this.chatInput.addEventListener('input', () => {
-                    this.sendButton.disabled = !this.chatInput.value.trim() || !this.apiKey;
-                });
+                } catch (error) {
+                    console.error('Erro ao carregar API key:', error);
+                    this.showAPIKeyError();
+                }
             }
             
-            setupAPI(apiKey) {
-                this.apiKey = apiKey;
+            showAPIKeyError() {
+                this.chatMessages.innerHTML = `
+                    <div class="message error">
+                        <h3>❌ Configuração Necessária</h3>
+                        <p>A chave da API não foi encontrada. Por favor, configure a variável de ambiente GROQ_API_KEY no Netlify.</p>
+                        <p><strong>Como configurar:</strong></p>
+                        <p>1. Acesse o painel do Netlify</p>
+                        <p>2. Vá em Site Settings > Environment Variables</p>
+                        <p>3. Adicione: GROQ_API_KEY = sua_chave_aqui</p>
+                        <p>4. Faça um novo deploy</p>
+                        <br>
+                        <p>Obtenha sua chave gratuita em: <a href="https://console.groq.com" target="_blank" style="color: #4CAF50;">console.groq.com</a></p>
+                    </div>
+                `;
                 
-                // Remove setup e mostra mensagem de boas-vindas
-                document.getElementById('apiKeySetup').remove();
+                this.aiStatus.textContent = '❌ API não configurada';
+                this.aiStatus.style.background = 'rgba(244, 67, 54, 0.9)';
+            }
+            
+            initializeChat() {
+                // Remove mensagem de carregamento
+                this.chatMessages.innerHTML = '';
                 
+                // Mostra mensagem de boas-vindas
                 this.addMessage('Olá! 👋 Sou a BarIA, sua assistente especializada em cirurgia bariátrica. Como posso ajudá-lo hoje?', 'system');
                 this.showQuickOptions();
                 
                 // Habilita o chat
                 this.chatInput.disabled = false;
-                this.chatInput.placeholder = 'Digite sua pergunta sobre cirurgia bariátrica...';
-                
-                // Atualiza status
-                this.aiStatus.textContent = '🟢 IA: Conectada';
-                this.aiStatus.classList.add('connected');
-            }
-            
-            showQuickOptions() {
-                const optionsDiv = document.createElement('div');
-                optionsDiv.classList.add('options-menu');
-                
-                optionsDiv.innerHTML = `
-                    <h3>💡 Sugestões rápidas:</h3>
-                    <div class="option-buttons">
-                        <button class="option-btn" data-query="Como calcular meu IMC e saber se posso fazer cirurgia bariátrica?">
-                            📊 Critérios para cirurgia
-                        </button>
-                        <button class="option-btn" data-query="Quais documentos preciso para cirurgia bariátrica pelo plano de saúde?">
-                            📋 Documentos necessários
-                        </button>
-                        <button class="option-btn" data-query="Como é o pós-operatório da cirurgia bariátrica?">
-                            💪 Pós-operatório
-                        </button>
-                        <button class="option-btn" data-query="Quais são os tipos de cirurgia bariátrica disponíveis?">
-                            🔬 Tipos de cirurgia
-                        </button>
-                    </div>
-                `;
-                
-                this.chatMessages.appendChild(optionsDiv);
-                this.setupOptionListeners(optionsDiv);
-                this.scrollToBottom();
-            }
-            
-            setupOptionListeners(optionsDiv) {
-                const buttons = optionsDiv.querySelectorAll('.option-btn');
-                buttons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const query = button.getAttribute('data-query');
-                        this.chatInput.value = query;
-                        this.sendMessage();
-                        optionsDiv.remove();
-                    });
-                });
-            }
-            
-            async sendMessage() {
-                const message = this.chatInput.value.trim();
-                if (!message || !this.apiKey) return;
-                
-                this.addMessage(message, 'user');
-                this.chatInput.value = '';
-                this.sendButton.disabled = true;
-                
-                this.showTyping(true);
-                
-                try {
-                    const response = await this.callGroqAPI(message);
-                    this.showTyping(false);
-                    this.addMessage(response, 'assistant');
-                } catch (error) {
-                    this.showTyping(false);
-                    console.error('Erro na API:', error);
-                    this.addMessage('❌ Desculpe, ocorreu um erro ao processar sua mensagem. Verifique sua conexão e tente novamente.', 'error');
-                }
-                
-                this.sendButton.disabled = false;
-            }
-            
-            async callGroqAPI(userMessage) {
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: 'llama3-8b-8192',
-                        messages: [
-                            { role: 'system', content: this.systemPrompt },
-                            { role: 'user', content: userMessage }
-                        ],
-                        max_tokens: 1000,
-                        temperature: 0.7
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                return data.choices[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
-            }
-            
-            addMessage(text, type = 'assistant') {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', type);
-                messageDiv.innerHTML = this.formatMessage(text);
-                
-                this.chatMessages.appendChild(messageDiv);
-                this.scrollToBottom();
-            }
-            
-            formatMessage(text) {
-                // Converte quebras de linha e formata o texto
-                return text
-                    .replace(/\n\n/g, '</p><p>')
-                    .replace(/\n/g, '<br>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/^\s*[\*\-]\s+/gm, '• ');
-            }
-            
-            showTyping(show) {
-                this.typingIndicator.style.display = show ? 'block' : 'none';
-                if (show) this.scrollToBottom();
-            }
-            
-            scrollToBottom() {
-                setTimeout(() => {
-                    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-                }, 100);
-            }
-        }
-        
-        // Função global para configurar API
-        function setupAPI() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            
-            if (!apiKey) {
-                alert('Por favor, insira sua chave da API do GroqCloud.');
-                return;
-            }
-            
-            if (!apiKey.startsWith('gsk_')) {
-                alert('A chave da API do GroqCloud deve começar com "gsk_".');
-                return;
-            }
-            
-            window.bariaChat.setupAPI(apiKey);
-        }
-        
-        // Inicializar quando a página carregar
-        document.addEventListener('DOMContentLoaded', () => {
-            window.bariaChat = new BarIAGroq();
-        });
-    </script>
-</body>
-</html>
+                this.chatInput.placeholder = 'Digite sua pergunta sobre cirurgia bariátrica...
