@@ -160,6 +160,12 @@
             border-radius: 10px;
         }
 
+        .message.warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ffcc80;
+            border: 1px solid rgba(255, 152, 0, 0.5);
+        }
+
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -359,7 +365,7 @@
 <body>
     <!-- AI Status Indicator -->
     <div class="ai-status" id="aiStatus">
-        🤖 IA: CONECTANDO...
+        🤖 IA: ONLINE
     </div>
 
     <div class="container loading">
@@ -412,24 +418,41 @@
     <script>
         class BarIAChat {
             constructor() {
-                // A API key será carregada via função serverless
-                this.apiUrl = '/.netlify/functions/chat';  // Endpoint da função serverless
-                
                 this.chatMessages = document.getElementById('chatMessages');
                 this.chatInput = document.getElementById('chatInput');
                 this.sendButton = document.getElementById('sendButton');
                 this.typingIndicator = document.getElementById('typingIndicator');
                 this.aiStatus = document.getElementById('aiStatus');
                 
-                this.conversationHistory = [];
+                // Estados e dados do usuário
+                this.conversationState = 'initial'; // initial, collecting_data, data_complete, helping
+                this.currentStep = 0;
+                this.userData = {
+                    name: null,
+                    age: null,
+                    gender: null,
+                    height: null,
+                    weight: null,
+                    isPatient: null,
+                    relationship: null
+                };
+                
+                // Fluxo de perguntas
+                this.questionFlow = [
+                    { key: 'name', question: '1️⃣ Qual é o seu primeiro nome?' },
+                    { key: 'isPatient', question: '2️⃣ Você é a pessoa interessada na cirurgia bariátrica, ou está buscando informações para outra pessoa?' },
+                    { key: 'age', question: '3️⃣ Qual é sua idade?', condition: 'isPatient' },
+                    { key: 'gender', question: '4️⃣ Como você se identifica em relação ao gênero? (masculino/feminino/outro)' },
+                    { key: 'height', question: '5️⃣ Qual é sua altura? (em metros, ex: 1.70)', condition: 'isPatient' },
+                    { key: 'weight', question: '6️⃣ Qual é seu peso atual? (em kg)', condition: 'isPatient' }
+                ];
                 
                 this.init();
             }
             
             init() {
                 this.setupEventListeners();
-                this.updateStatus('online');
-                console.log('BarIA inicializada com Netlify Functions! 🦋');
+                console.log('BarIA inicializada com sistema de regras! 🦋');
             }
             
             setupEventListeners() {
@@ -446,18 +469,6 @@
                 });
             }
             
-            updateStatus(status) {
-                const statusMap = {
-                    'online': { text: '🤖 IA: ONLINE', color: 'rgba(46, 125, 50, 0.9)' },
-                    'connecting': { text: '🔄 IA: CONECTANDO...', color: 'rgba(255, 193, 7, 0.9)' },
-                    'error': { text: '⚠️ IA: ERRO', color: 'rgba(244, 67, 54, 0.9)' }
-                };
-                
-                const status_info = statusMap[status] || statusMap.online;
-                this.aiStatus.textContent = status_info.text;
-                this.aiStatus.style.background = status_info.color;
-            }
-            
             async sendMessage() {
                 const message = this.chatInput.value.trim();
                 if (!message) return;
@@ -467,61 +478,355 @@
                 this.chatInput.value = '';
                 this.sendButton.disabled = true;
                 
-                // Mostra indicador de digitação
+                // Processa a mensagem seguindo as regras
                 this.showTyping(true);
-                this.updateStatus('connecting');
                 
-                try {
-                    const response = await this.callNetlifyFunction(message);
-                    this.addMessage(response, 'assistant');
-                    this.updateStatus('online');
-                } catch (error) {
-                    console.error('Erro na API:', error);
-                    this.showError('Desculpe, houve um erro. Tente novamente em alguns instantes.');
-                    this.updateStatus('error');
-                } finally {
+                setTimeout(() => {
+                    this.processMessage(message);
                     this.showTyping(false);
+                }, 1000);
+            }
+            
+            processMessage(message) {
+                const lowerMessage = message.toLowerCase().trim();
+                
+                // Estado inicial - aguardando cumprimento
+                if (this.conversationState === 'initial') {
+                    if (this.isGreeting(lowerMessage)) {
+                        this.conversationState = 'asking_permission';
+                        this.addMessage('Olá! 👋 Eu sou a BarIA, sua assistente virtual focada em cirurgia bariátrica no Brasil. Posso te fazer algumas perguntinhas para entender melhor sua situação e te ajudar nessa jornada?', 'assistant');
+                        return;
+                    }
+                }
+                
+                // Aguardando permissão para fazer perguntas
+                if (this.conversationState === 'asking_permission') {
+                    if (this.isPositiveResponse(lowerMessage)) {
+                        this.conversationState = 'collecting_data';
+                        this.askCurrentQuestion();
+                        return;
+                    } else if (this.isNegativeResponse(lowerMessage)) {
+                        this.addMessage('Tudo bem! Se mudar de ideia e quiser saber mais sobre cirurgia bariátrica, estarei aqui para ajudar. É só me chamar! 💙', 'assistant');
+                        this.conversationState = 'helping';
+                        return;
+                    }
+                }
+                
+                // Coletando dados do usuário
+                if (this.conversationState === 'collecting_data') {
+                    this.processDataCollection(message);
+                    return;
+                }
+                
+                // Modo de ajuda geral
+                if (this.conversationState === 'helping' || this.conversationState === 'data_complete') {
+                    this.processGeneralHelp(message);
+                    return;
+                }
+                
+                // Resposta padrão se não entendeu
+                this.addMessage('Desculpe, não entendi bem. Pode tentar de novo? Se quiser começar nossa conversa, é só me cumprimentar! 😊', 'assistant');
+            }
+            
+            processDataCollection(message) {
+                const currentQuestion = this.questionFlow[this.currentStep];
+                
+                if (!currentQuestion) {
+                    this.finishDataCollection();
+                    return;
+                }
+                
+                // Valida e armazena a resposta
+                const validation = this.validateResponse(currentQuestion.key, message);
+                
+                if (!validation.valid) {
+                    this.addMessage(validation.message, 'assistant');
+                    return;
+                }
+                
+                this.userData[currentQuestion.key] = validation.value;
+                
+                // Confirma a resposta e agradece
+                const confirmationMessage = this.getConfirmationMessage(currentQuestion.key, validation.value);
+                this.addMessage(confirmationMessage, 'assistant');
+                
+                // Avança para próxima pergunta ou finaliza
+                this.currentStep++;
+                
+                // Verifica se precisa pular alguma pergunta baseada em condições
+                this.skipQuestionsIfNeeded();
+                
+                if (this.currentStep < this.questionFlow.length) {
+                    setTimeout(() => {
+                        this.askCurrentQuestion();
+                    }, 1500);
+                } else {
+                    setTimeout(() => {
+                        this.finishDataCollection();
+                    }, 1500);
                 }
             }
             
-            async callNetlifyFunction(userMessage) {
-                // Adiciona mensagem do usuário ao histórico
-                this.conversationHistory.push({
-                    role: 'user',
-                    content: userMessage
-                });
+            skipQuestionsIfNeeded() {
+                while (this.currentStep < this.questionFlow.length) {
+                    const question = this.questionFlow[this.currentStep];
+                    
+                    // Se a pergunta tem condição e não deve ser feita
+                    if (question.condition === 'isPatient' && !this.userData.isPatient) {
+                        this.currentStep++;
+                        continue;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            validateResponse(key, message) {
+                const value = message.trim();
                 
-                const response = await fetch(this.apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        messages: this.conversationHistory,
-                        maxHistory: 20 // Limita o histórico
-                    })
-                });
+                switch (key) {
+                    case 'name':
+                        if (value.length < 2) {
+                            return { valid: false, message: 'Por favor, me diga um nome válido com pelo menos 2 letras.' };
+                        }
+                        return { valid: true, value: value };
+                        
+                    case 'isPatient':
+                        const lowerValue = value.toLowerCase();
+                        if (lowerValue.includes('sim') || lowerValue.includes('eu') || lowerValue.includes('para mim')) {
+                            return { valid: true, value: true };
+                        } else if (lowerValue.includes('não') || lowerValue.includes('outra') || lowerValue.includes('outra pessoa')) {
+                            return { valid: true, value: false };
+                        }
+                        return { valid: false, message: 'Por favor, responda se é você quem tem interesse na cirurgia ou se está buscando informações para outra pessoa.' };
+                        
+                    case 'age':
+                        const age = parseInt(value);
+                        if (isNaN(age) || age < 16 || age > 100) {
+                            return { valid: false, message: 'Por favor, me diga uma idade válida entre 16 e 100 anos.' };
+                        }
+                        return { valid: true, value: age };
+                        
+                    case 'gender':
+                        const gender = value.toLowerCase();
+                        if (gender.includes('masc') || gender.includes('homem')) {
+                            return { valid: true, value: 'masculino' };
+                        } else if (gender.includes('fem') || gender.includes('mulher')) {
+                            return { valid: true, value: 'feminino' };
+                        } else if (gender.includes('outro') || gender.includes('não binário') || gender.includes('prefiro não')) {
+                            return { valid: true, value: 'outro' };
+                        }
+                        return { valid: false, message: 'Por favor, me diga como se identifica: masculino, feminino ou outro.' };
+                        
+                    case 'height':
+                        const height = parseFloat(value.replace(',', '.'));
+                        if (isNaN(height) || height < 1.30 || height > 2.20) {
+                            return { valid: false, message: 'Por favor, me diga sua altura em metros (exemplo: 1.70).' };
+                        }
+                        return { valid: true, value: height };
+                        
+                    case 'weight':
+                        const weight = parseFloat(value.replace(',', '.'));
+                        if (isNaN(weight) || weight < 40 || weight > 300) {
+                            return { valid: false, message: 'Por favor, me diga seu peso em quilos (exemplo: 85).' };
+                        }
+                        return { valid: true, value: weight };
+                        
+                    default:
+                        return { valid: true, value: value };
+                }
+            }
+            
+            getConfirmationMessage(key, value) {
+                const name = this.userData.name || 'você';
+                const pronoun = this.getPronoun();
                 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Erro da API: ${response.status} - ${errorText}`);
+                switch (key) {
+                    case 'name':
+                        return `Prazer, ${value}! 😊`;
+                        
+                    case 'isPatient':
+                        if (value) {
+                            return `Entendi, ${name}! Vou te ajudar com informações sobre a cirurgia bariátrica.`;
+                        } else {
+                            return `Entendi, ${name}! Você está buscando informações para outra pessoa. Que legal esse cuidado! ❤️`;
+                        }
+                        
+                    case 'age':
+                        return `Obrigada, ${name}! ${value} anos.`;
+                        
+                    case 'gender':
+                        if (value === 'outro') {
+                            return `Obrigada pelas informações, ${name}!`;
+                        } else {
+                            return `Obrigada, ${name}!`;
+                        }
+                        
+                    case 'height':
+                        return `Perfeito, ${name}! ${value}m de altura.`;
+                        
+                    case 'weight':
+                        return `Obrigada, ${name}! ${value}kg.`;
+                        
+                    default:
+                        return `Obrigada, ${name}!`;
+                }
+            }
+            
+            askCurrentQuestion() {
+                const question = this.questionFlow[this.currentStep];
+                if (question) {
+                    this.addMessage(question.question, 'assistant');
+                }
+            }
+            
+            finishDataCollection() {
+                this.conversationState = 'data_complete';
+                
+                const name = this.userData.name;
+                const pronoun = this.getPronoun();
+                
+                if (!this.userData.isPatient) {
+                    // Caso seja para outra pessoa
+                    this.addMessage(
+                        `${name}, é muito importante que você saiba que todas as decisões sobre cirurgia bariátrica devem sempre partir da própria pessoa interessada. ` +
+                        `Meu papel é fornecer informações gerais sobre documentos necessários e como oferecer apoio emocional. ` +
+                        `Lembre-se: não é ético pressionar alguém a fazer qualquer procedimento cirúrgico. A decisão deve ser sempre pessoal e bem refletida.`,
+                        'assistant'
+                    );
+                } else {
+                    // Calcula IMC e fornece informações completas
+                    const imc = this.calculateIMC();
+                    const imcCategory = this.getIMCCategory(imc);
+                    const ansInfo = this.getANSInfo(imc);
+                    
+                    setTimeout(() => {
+                        this.addMessage(
+                            `Pronto, ${name}! Com base nos seus dados, seu IMC é ${imc.toFixed(1)} (${imcCategory}). ` +
+                            `${ansInfo} ` +
+                            `Posso continuar te ajudando com dicas e orientações sobre o pré e pós cirúrgico da bariátrica. É só me chamar! 💙`,
+                            'assistant'
+                        );
+                    }, 2000);
+                }
+            }
+            
+            calculateIMC() {
+                const { height, weight } = this.userData;
+                return weight / (height * height);
+            }
+            
+            getIMCCategory(imc) {
+                if (imc < 18.5) return 'abaixo do peso';
+                if (imc < 25) return 'peso normal';
+                if (imc < 30) return 'sobrepeso';
+                if (imc < 35) return 'obesidade grau I';
+                if (imc < 40) return 'obesidade grau II';
+                return 'obesidade grau III';
+            }
+            
+            getANSInfo(imc) {
+                if (imc >= 40) {
+                    return 'Pela ANS, você já tem indicação para cirurgia bariátrica. Pode buscar pelo SUS, plano de saúde ou particular.';
+                } else if (imc >= 35) {
+                    return 'Com IMC acima de 35, você tem indicação para cirurgia se tiver comorbidades (diabetes, hipertensão, etc). Procure um médico para avaliação.';
+                } else {
+                    return 'Seu IMC ainda não atende aos critérios da ANS para cirurgia bariátrica. Recomendo buscar orientação médica para outras opções de tratamento.';
+                }
+            }
+            
+            getPronoun() {
+                if (!this.userData.gender || this.userData.gender === 'outro') {
+                    return { article: '', pronoun: 'você' };
+                }
+                return this.userData.gender === 'masculino' ? 
+                    { article: 'o', pronoun: 'ele' } : 
+                    { article: 'a', pronoun: 'ela' };
+            }
+            
+            processGeneralHelp(message) {
+                const lowerMessage = message.toLowerCase();
+                
+                // Verifica se está pedindo dicas de dieta (proibido)
+                if (lowerMessage.includes('dieta') || lowerMessage.includes('cardápio') || lowerMessage.includes('alimentação') && lowerMessage.includes('como')) {
+                    this.addMessage(
+                        'Para orientações sobre alimentação e dietas, é muito importante buscar um profissional habilitado como Nutricionista ou Nutrólogo. ' +
+                        'Eles poderão avaliar seu caso individual e criar um plano adequado para você. Posso ajudar com outras dúvidas sobre a cirurgia! 😊',
+                        'assistant'
+                    );
+                    return;
                 }
                 
-                const data = await response.json();
-                const assistantMessage = data.response;
-                
-                // Adiciona resposta ao histórico
-                this.conversationHistory.push({
-                    role: 'assistant',
-                    content: assistantMessage
-                });
-                
-                // Limita o histórico para evitar contexto muito longo
-                if (this.conversationHistory.length > 20) {
-                    this.conversationHistory = this.conversationHistory.slice(-18);
+                // Verifica se está perguntando sobre técnicas cirúrgicas
+                if (lowerMessage.includes('técnica') || lowerMessage.includes('bypass') || lowerMessage.includes('sleeve') || lowerMessage.includes('banda')) {
+                    this.addMessage(
+                        'Existem diferentes técnicas cirúrgicas como Bypass, Sleeve, Banda Gástrica, etc. Cada uma tem suas particularidades e indicações específicas. ' +
+                        'A escolha da melhor técnica deve sempre ser discutida com o cirurgião que fará sua avaliação. Ele conhecerá seu caso e poderá indicar a mais adequada para você! 👩‍⚕️',
+                        'assistant'
+                    );
+                    return;
                 }
                 
-                return assistantMessage;
+                // Respostas gerais sobre pré e pós operatório
+                if (lowerMessage.includes('pré') || lowerMessage.includes('antes')) {
+                    this.addMessage(
+                        'No pré-operatório é importante: seguir orientações médicas, fazer exames solicitados, participar de consultas multidisciplinares, ' +
+                        'manter acompanhamento psicológico se necessário. Cada equipe médica tem seu protocolo específico. Sempre siga as orientações do seu médico! 📋',
+                        'assistant'
+                    );
+                    return;
+                }
+                
+                if (lowerMessage.includes('pós') || lowerMessage.includes('depois') || lowerMessage.includes('recuperação')) {
+                    this.addMessage(
+                        'No pós-operatório é fundamental: seguir a dieta orientada pela nutricionista, tomar vitaminas prescritas, fazer exercícios conforme liberação médica, ' +
+                        'manter consultas regulares com a equipe. O sucesso depende muito do seu comprometimento com as mudanças de hábitos! 💪',
+                        'assistant'
+                    );
+                    return;
+                }
+                
+                // Informações sobre documentos e processos
+                if (lowerMessage.includes('documento') || lowerMessage.includes('papel') || lowerMessage.includes('sus') || lowerMessage.includes('plano')) {
+                    this.addMessage(
+                        'Para cirurgia pelo SUS: procure uma UBS para encaminhamento. Para plano de saúde: verifique cobertura e documentos exigidos. ' +
+                        'Geralmente precisam de: relatórios médicos, exames, comprovação de tentativas anteriores de emagrecimento. Cada caso é único! 📄',
+                        'assistant'
+                    );
+                    return;
+                }
+                
+                // Informações sobre apoio emocional
+                if (lowerMessage.includes('apoio') || lowerMessage.includes('família') || lowerMessage.includes('ajuda')) {
+                    this.addMessage(
+                        'O apoio familiar e emocional é muito importante nessa jornada! Ter pessoas que entendam e apoiem suas mudanças faz toda diferença. ' +
+                        'Muitos hospitais oferecem grupos de apoio. Vale a pena participar e trocar experiências! 🤗',
+                        'assistant'
+                    );
+                    return;
+                }
+                
+                // Se não entendeu a pergunta
+                this.addMessage(
+                    'Posso ajudar com informações sobre: documentos necessários, pré e pós operatório, apoio emocional, processo pelo SUS/plano de saúde. ' +
+                    'O que gostaria de saber? 😊',
+                    'assistant'
+                );
+            }
+            
+            isGreeting(message) {
+                const greetings = ['oi', 'olá', 'hello', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'ei', 'hey'];
+                return greetings.some(greeting => message.includes(greeting));
+            }
+            
+            isPositiveResponse(message) {
+                const positive = ['sim', 'si', 'yes', 'pode', 'claro', 'ok', 'tudo bem', 'vamos', 'aceito', 'concordo'];
+                return positive.some(word => message.includes(word));
+            }
+            
+            isNegativeResponse(message) {
+                const negative = ['não', 'nao', 'no', 'nunca', 'jamais', 'recuso', 'dispenso'];
+                return negative.some(word => message.includes(word));
             }
             
             addMessage(content, sender) {
