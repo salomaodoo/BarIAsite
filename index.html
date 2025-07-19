@@ -675,6 +675,26 @@ showInsuranceInfo() {
     
     setTimeout(() => this.showMainMenu(), 2000);
 }
+showInsuranceInfo() {
+    this.addMessage(
+        '🏛️ SUS/Plano de Saúde:<br><br>' +
+        '<strong>Pelo SUS:</strong>' +
+        '<ul>' +
+        '<li>Procure uma UBS para encaminhamento</li>' +
+        '<li>Tenha paciência com a fila de espera</li>' +
+        '</ul>' +
+        '<strong>Pelo Plano:</strong>' +
+        '<ul>' +
+        '<li>Verifique se tem cobertura</li>' +
+        '<li>Reúna documentos exigidos</li>' +
+        '<li>Solicite autorização prévia</li>' +
+        '</ul>' +
+        'Cada caso tem suas particularidades!',
+        'assistant'
+    );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
             
             showSurgeryTypesInfo() {
                 this.addMessage(
