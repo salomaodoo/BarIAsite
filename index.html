@@ -1,434 +1,832 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Bot, Calculator, FileText, Heart, Phone, Stethoscope } from 'lucide-react';
-
-const BarIAChatbot = () => {
-  const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState('');
-  const [userData, setUserData] = useState({});
-  const [currentStep, setCurrentStep] = useState('welcome');
-  const [showMenu, setShowMenu] = useState(false);
-  const messagesEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    // Mensagem inicial
-    setMessages([
-      {
-        type: 'bot',
-        content: 'Olá! 👋 Eu sou a BarIA, sua assistente virtual focada em cirurgia bariátrica no Brasil. Posso te fazer algumas perguntinhas para entender melhor sua situação e te ajudar nessa jornada?',
-        timestamp: new Date()
-      }
-    ]);
-  }, []);
-
-  const calculateIMC = (weight, height) => {
-    return (weight / (height * height)).toFixed(1);
-  };
-
-  const getIMCClassification = (imc) => {
-    if (imc < 18.5) return 'Abaixo do peso';
-    if (imc < 25) return 'Peso normal';
-    if (imc < 30) return 'Sobrepeso';
-    if (imc < 35) return 'Obesidade grau I';
-    if (imc < 40) return 'Obesidade grau II';
-    return 'Obesidade grau III';
-  };
-
-  const menuOptions = [
-    { id: 'documentos', title: '📄 Documentos Necessários', icon: FileText },
-    { id: 'pre-operatorio', title: '🩺 Pré-operatório', icon: Stethoscope },
-    { id: 'pos-operatorio', title: '💊 Pós-operatório', icon: Heart },
-    { id: 'tipos-cirurgia', title: '⚕️ Tipos de Cirurgia', icon: Calculator },
-    { id: 'plano-sus', title: '🏥 Plano de Saúde / SUS', icon: Phone },
-    { id: 'exames', title: '🔬 Exames Necessários', icon: FileText }
-  ];
-
-  const responses = {
-    documentos: `**Documentos necessários ${userData.name ? `para você, ${userData.name}` : ''}:**
-
-📋 **Para Plano de Saúde:**
-• Relatórios médicos detalhados
-• Histórico de tentativas de emagrecimento (mínimo 2 anos)
-• Exames laboratoriais completos
-• Avaliação psicológica
-• Relatório de endocrinologista
-• Comprovante de IMC > 40 ou > 35 com comorbidades
-
-📋 **Para SUS:**
-• Encaminhamento da UBS
-• Cartão do SUS
-• Documento com foto
-• Comprovante de residência
-• Relatórios médicos disponíveis`,
-
-    'pre-operatorio': `**Pré-operatório ${userData.name ? `- Dicas para você, ${userData.name}` : ''}:**
-
-🍽️ **Preparação Nutricional:**
-• Dieta líquida 1-2 semanas antes
-• Suplementação vitamínica
-• Redução do peso pré-cirúrgico
-
-🧠 **Preparação Psicológica:**
-• Acompanhamento psicológico
-• Grupos de apoio
-• Compreensão das mudanças de vida
-
-📋 **Exames e Consultas:**
-• Avaliação cardiológica
-• Exames laboratoriais
-• Endoscopia digestiva
-• Consulta anestésica`,
-
-    'pos-operatorio': `**Pós-operatório ${userData.name ? `- Cuidados importantes para você` : ''}:**
-
-🥤 **Primeiros dias:**
-• Apenas líquidos claros
-• Pequenos goles frequentes
-• Hidratação constante
-
-🍎 **Após 1 mês:**
-• Introdução gradual de alimentos sólidos
-• Mastigação lenta e cuidadosa
-• Suplementação vitamínica
-
-💊 **Acompanhamento:**
-• Consultas regulares com equipe
-• Exames de controle
-• Apoio psicológico contínuo`,
-
-    'tipos-cirurgia': `**Principais tipos de cirurgia ${userData.name ? `disponíveis para você` : ''}:**
-
-🔹 **Bypass Gástrico:**
-• Mais comum no Brasil
-• Reduz estômago e intestino
-• Perda de 60-80% do excesso de peso
-
-🔹 **Sleeve (Manga Gástrica):**
-• Remove parte do estômago
-• Preserva trânsito intestinal
-• Perda de 50-70% do excesso de peso
-
-🔹 **Banda Gástrica:**
-• Menos invasiva
-• Ajustável
-• Perda de 40-60% do excesso de peso
-
-💡 **Importante:** A escolha depende do seu perfil médico!`,
-
-    'plano-sus': `**Como acessar ${userData.name ? `a cirurgia, ${userData.name}` : 'a cirurgia'}:**
-
-🏥 **Pelo SUS:**
-• Procure sua UBS (Unidade Básica de Saúde)
-• Solicite encaminhamento para centro especializado
-• Aguarde na fila de espera (pode demorar 1-3 anos)
-• Gratuito, mas com maior tempo de espera
-
-💳 **Pelo Plano de Saúde:**
-• Verifique se seu plano cobre (obrigatório por lei)
-• Reúna documentação necessária
-• Pode haver carência de 24 meses
-• Mais rápido que o SUS
-
-💰 **Particular:**
-• Valor entre R$ 15.000 - 50.000
-• Sem tempo de espera
-• Escolha livre do cirurgião`,
-
-    exames: `**Exames necessários ${userData.name ? `para você, ${userData.name}` : ''}:**
-
-🩸 **Laboratoriais:**
-• Hemograma completo
-• Glicemia e insulina
-• Perfil lipídico
-• Função renal e hepática
-• Vitaminas (B12, D, ferro)
-
-📸 **Imagem:**
-• Ultrassom abdominal
-• Endoscopia digestiva
-• Raio-X de tórax
-• Ecocardiograma
-
-⚡ **Funcionais:**
-• Teste ergométrico
-• Espirometria
-• Avaliação cardiológica completa
-
-${userData.imc ? `\n💡 **Com seu IMC de ${userData.imc}**, todos esses exames serão importantes para avaliar sua condição geral.` : ''}`
-  };
-
-  const addMessage = (type, content) => {
-    const newMessage = {
-      type,
-      content,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, newMessage]);
-  };
-
-  const handleMenuClick = (optionId) => {
-    addMessage('user', menuOptions.find(opt => opt.id === optionId).title);
-    addMessage('bot', responses[optionId]);
-    setShowMenu(false);
-  };
-
-  const processUserInput = (input) => {
-    const lowercaseInput = input.toLowerCase().trim();
-
-    if (currentStep === 'welcome') {
-      if (lowercaseInput.includes('sim') || lowercaseInput.includes('claro') || lowercaseInput.includes('ok')) {
-        setCurrentStep('getName');
-        return 'Perfeito! Vamos começar:\n\n1️⃣ **Qual é o seu primeiro nome?**';
-      } else {
-        setCurrentStep('menu');
-        setShowMenu(true);
-        return 'Sem problemas! Posso te ajudar com informações específicas sobre cirurgia bariátrica. Escolha um tópico abaixo:';
-      }
-    }
-
-    if (currentStep === 'getName') {
-      const name = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
-      setUserData(prev => ({ ...prev, name }));
-      setCurrentStep('getAge');
-      return `Prazer te conhecer, ${name}! 😊\n\n2️⃣ **Qual é a sua idade?**`;
-    }
-
-    if (currentStep === 'getAge') {
-      const age = parseInt(input);
-      if (age && age > 0 && age < 120) {
-        setUserData(prev => ({ ...prev, age }));
-        setCurrentStep('getGender');
-        return `Obrigada, ${userData.name}!\n\n3️⃣ **Como você se identifica em relação ao gênero?**\n• Masculino\n• Feminino\n• Outro`;
-      } else {
-        return 'Por favor, digite uma idade válida (exemplo: 30)';
-      }
-    }
-
-    if (currentStep === 'getGender') {
-      const gender = lowercaseInput.includes('masc') ? 'masculino' : 
-                    lowercaseInput.includes('fem') ? 'feminino' : 'outro';
-      setUserData(prev => ({ ...prev, gender }));
-      setCurrentStep('getHeight');
-      return `Perfeito!\n\n4️⃣ **Qual é a sua altura?** (em metros, exemplo: 1.70)`;
-    }
-
-    if (currentStep === 'getHeight') {
-      const height = parseFloat(input.replace(',', '.'));
-      if (height && height > 0.5 && height < 3) {
-        setUserData(prev => ({ ...prev, height }));
-        setCurrentStep('getWeight');
-        return `Ótimo! ${height}m de altura.\n\n5️⃣ **Qual é o seu peso atual?** (em kg, exemplo: 85)`;
-      } else {
-        return 'Por favor, digite uma altura válida (exemplo: 1.75)';
-      }
-    }
-
-    if (currentStep === 'getWeight') {
-      const weight = parseFloat(input.replace(',', '.'));
-      if (weight && weight > 30 && weight < 500) {
-        const imc = calculateIMC(weight, userData.height);
-        const classification = getIMCClassification(imc);
-        
-        setUserData(prev => ({ ...prev, weight, imc, classification }));
-        setCurrentStep('menu');
-        setShowMenu(true);
-
-        let imcMessage = `**Pronto, ${userData.name}!** 🎉\n\n`;
-        imcMessage += `📊 **Seus dados:**\n`;
-        imcMessage += `• Nome: ${userData.name}\n`;
-        imcMessage += `• Idade: ${userData.age} anos\n`;
-        imcMessage += `• Altura: ${userData.height}m\n`;
-        imcMessage += `• Peso: ${weight}kg\n`;
-        imcMessage += `• **IMC: ${imc}** (${classification})\n\n`;
-
-        if (parseFloat(imc) >= 40) {
-          imcMessage += `✅ **Pela ANS, você já tem indicação para cirurgia bariátrica!**\n\n`;
-          imcMessage += `Você pode buscar atendimento pelo SUS, plano de saúde ou particular.\n\n`;
-        } else if (parseFloat(imc) >= 35) {
-          imcMessage += `⚠️ **Você pode ter indicação para cirurgia** se tiver comorbidades associadas (diabetes, hipertensão, apneia do sono, etc.).\n\n`;
-        } else {
-          imcMessage += `ℹ️ **Seu IMC ainda não atende aos critérios da ANS** para cirurgia bariátrica, mas posso te orientar sobre outras opções.\n\n`;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarIA - Sua Assistente Inteligente para Cirurgia Bariátrica</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        imcMessage += `Agora posso te ajudar com informações específicas. Escolha um tópico abaixo:`;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
 
-        return imcMessage;
-      } else {
-        return 'Por favor, digite um peso válido (exemplo: 85)';
-      }
-    }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 1200px;
+            width: 100%;
+            height: 80vh;
+            gap: 60px;
+            align-items: center;
+            padding: 0 40px;
+        }
 
-    // Menu ativo - buscar por palavras-chave
-    if (showMenu || currentStep === 'menu') {
-      if (lowercaseInput.includes('document') || lowercaseInput.includes('papel')) {
-        handleMenuClick('documentos');
-        return responses.documentos;
-      }
-      if (lowercaseInput.includes('pré') || lowercaseInput.includes('antes') || lowercaseInput.includes('preparar')) {
-        handleMenuClick('pre-operatorio');
-        return responses['pre-operatorio'];
-      }
-      if (lowercaseInput.includes('pós') || lowercaseInput.includes('depois') || lowercaseInput.includes('cuidado')) {
-        handleMenuClick('pos-operatorio');
-        return responses['pos-operatorio'];
-      }
-      if (lowercaseInput.includes('tipo') || lowercaseInput.includes('cirurgia')) {
-        handleMenuClick('tipos-cirurgia');
-        return responses['tipos-cirurgia'];
-      }
-      if (lowercaseInput.includes('plano') || lowercaseInput.includes('sus') || lowercaseInput.includes('saúde')) {
-        handleMenuClick('plano-sus');
-        return responses['plano-sus'];
-      }
-      if (lowercaseInput.includes('exame') || lowercaseInput.includes('laboratório')) {
-        handleMenuClick('exames');
-        return responses.exames;
-      }
-      if (lowercaseInput.includes('obrig') || lowercaseInput.includes('tchau') || lowercaseInput.includes('encerr')) {
-        return `Foi um prazer te ajudar, ${userData.name || 'amigo(a)'}! 😊\n\nLembre-se: sempre consulte um médico especialista para orientações personalizadas. Boa sorte na sua jornada! 💙\n\n*Se precisar de mais informações, é só voltar a conversar comigo!*`;
-      }
-      
-      // Se não encontrou palavra-chave, mostrar menu
-      setShowMenu(true);
-      return `Desculpe, não entendi. Escolha uma das opções abaixo ou digite sobre o que gostaria de saber:`;
-    }
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
 
-    return 'Como posso te ajudar? Digite sua dúvida ou escolha uma das opções do menu.';
-  };
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3),
+                        0 0 0 3px rgba(192, 192, 192, 0.8);
+            animation: float 4s ease-in-out infinite;
+            border: 2px solid #c0c0c0;
+            margin-bottom: 30px;
+        }
 
-  const handleSend = () => {
-    if (inputValue.trim() === '') return;
+        .avatar::before {
+            content: '🦋';
+            font-size: 60px;
+            filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.7));
+        }
 
-    addMessage('user', inputValue);
-    const response = processUserInput(inputValue);
-    
-    setTimeout(() => {
-      addMessage('bot', response);
-    }, 500);
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
 
-    setInputValue('');
-  };
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #e8e8e8 50%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 500;
+            max-width: 400px;
+            line-height: 1.6;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
 
-  return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-full">
-            <Stethoscope className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">BarIA</h1>
-            <p className="text-blue-100 text-sm">Assistente em Cirurgia Bariátrica</p>
-          </div>
-        </div>
-      </div>
+        .right-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+        }
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex gap-3 ${
-              message.type === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            {message.type === 'bot' && (
-              <div className="bg-blue-500 p-2 rounded-full flex-shrink-0 h-fit">
-                <Bot className="w-4 h-4 text-white" />
-              </div>
-            )}
-            
-            <div
-              className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${
-                message.type === 'user'
-                  ? 'bg-blue-500 text-white ml-auto'
-                  : 'bg-white text-gray-800 border border-gray-200'
-              }`}
-            >
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                {message.content}
-              </div>
-              <div
-                className={`text-xs mt-1 ${
-                  message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
-              >
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </div>
-            </div>
-            
-            {message.type === 'user' && (
-              <div className="bg-blue-500 p-2 rounded-full flex-shrink-0 h-fit">
-                <User className="w-4 h-4 text-white" />
-              </div>
-            )}
-          </div>
-        ))}
+        .chat-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-        {/* Menu Options */}
-        {showMenu && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              📋 Escolha um tópico:
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {menuOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleMenuClick(option.id)}
-                  className="flex items-center gap-2 p-3 text-left bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-xl transition-all duration-200 border border-blue-100 hover:border-blue-200 text-sm"
-                >
-                  <option.icon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-gray-700 font-medium">{option.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        .chat-header h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
 
-        <div ref={messagesEndRef} />
-      </div>
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
 
-      {/* Input */}
-      <div className="p-4 bg-white border-t border-gray-200">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Digite sua mensagem..."
-            className="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <button
-            onClick={handleSend}
-            disabled={inputValue.trim() === ''}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white p-3 rounded-xl transition-colors duration-200"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
+        .chat-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-right: auto;
+        }
+
+        .message.system {
+            background: rgba(255, 193, 7, 0.2);
+            color: #fff;
+            text-align: center;
+            font-style: italic;
+            border-radius: 10px;
+        }
+
+        .options-menu {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-right: auto;
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .options-menu h3 {
+            margin-bottom: 15px;
+            color: #2a5298;
+            font-size: 16px;
+        }
+
+        .option-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(42, 82, 152, 0.4);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chat-input:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .send-button:disabled {
+            background: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #666;
+            border-radius: 18px;
+            max-width: 80px;
+            margin-right: auto;
+            margin-bottom: 10px;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .ai-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(46, 125, 50, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            color: #ffcdd2;
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+
+        /* Scrollbar customization */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+                height: 90vh;
+                gap: 30px;
+                padding: 20px;
+            }
+
+            .left-section {
+                padding: 20px 0;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 15px;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .avatar {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 20px;
+            }
+
+            .avatar::before {
+                font-size: 50px;
+            }
+
+            .chat-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .chat-container {
+                height: 400px;
+                padding: 15px;
+            }
+
+            .ai-status {
+                top: 10px;
+                right: 10px;
+                font-size: 0.7rem;
+                padding: 6px 12px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .option-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- AI Status Indicator -->
+    <div class="ai-status" id="aiStatus">
+        🤖 IA: ONLINE
     </div>
-  );
-};
 
-export default BarIAChatbot;
+    <div class="container loading">
+        <div class="left-section">
+            <div class="avatar"></div>
+            <h1>BarIA</h1>
+            <p class="subtitle">
+                Sua assistente inteligente especializada em cirurgia bariátrica no Brasil. 
+                Tire dúvidas e receba orientações personalizadas para sua jornada.
+            </p>
+        </div>
+
+        <div class="right-section">
+            <div class="chat-header">
+                <h2>Converse com a BarIA</h2>
+                <p>Chat ao vivo • Respostas em tempo real</p>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message system">
+                        Olá! Sou a BarIA, sua assistente para cirurgia bariátrica. Como posso ajudá-lo hoje? 🦋
+                    </div>
+                </div>
+                
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        class="chat-input" 
+                        id="chatInput" 
+                        placeholder="Digite sua mensagem ou use o menu acima..."
+                        maxlength="500"
+                    >
+                    <button class="send-button" id="sendButton">
+                        ✈️ Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BarIAChat {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.aiStatus = document.getElementById('aiStatus');
+                
+                this.conversationState = 'initial';
+                this.currentStep = 0;
+                this.userData = {};
+                this.hasCalculatedIMC = false;
+                
+                this.questionFlow = [
+                    { key: 'name', question: 'Qual é o seu primeiro nome?', emoji: '👤' },
+                    { key: 'isPatient', question: 'Você é a pessoa interessada na cirurgia, ou está buscando informações para outra pessoa?', emoji: '❓' },
+                    { key: 'age', question: 'Qual é sua idade?', emoji: '🎂', condition: 'isPatient' },
+                    { key: 'height', question: 'Qual é sua altura em metros? (ex: 1.70)', emoji: '📏', condition: 'isPatient' },
+                    { key: 'weight', question: 'Qual é seu peso atual em kg?', emoji: '⚖️', condition: 'isPatient' }
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.showMainMenu();
+                console.log('BarIA inicializada! 🦋');
+            }
+            
+            setupEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                this.chatInput.addEventListener('input', () => {
+                    this.sendButton.disabled = !this.chatInput.value.trim();
+                });
+            }
+            
+            showMainMenu() {
+                const menuDiv = document.createElement('div');
+                menuDiv.classList.add('options-menu');
+                
+                menuDiv.innerHTML = `
+                    <h3>Como posso te ajudar hoje? Escolha uma opção:</h3>
+                    <div class="option-buttons">
+                        <button class="option-btn" data-action="calculate">
+                            📊 Calcular meu IMC
+                        </button>
+                        <button class="option-btn" data-action="documents">
+                            📋 Documentos necessários
+                        </button>
+                        <button class="option-btn" data-action="pre-op">
+                            🏥 Pré-operatório
+                        </button>
+                        <button class="option-btn" data-action="post-op">
+                            💪 Pós-operatório
+                        </button>
+                        <button class="option-btn" data-action="surgery-types">
+                            🔬 Tipos de cirurgia
+                        </button>
+                        <button class="option-btn" data-action="insurance">
+                            🏛️ Plano de saúde/SUS
+                        </button>
+                    </div>
+                `;
+                
+                this.chatMessages.appendChild(menuDiv);
+                this.setupMenuListeners(menuDiv);
+                this.scrollToBottom();
+            }
+            
+            setupMenuListeners(menuDiv) {
+                const buttons = menuDiv.querySelectorAll('.option-btn');
+                buttons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const action = button.getAttribute('data-action');
+                        this.handleMenuAction(action);
+                    });
+                });
+            }
+            
+            handleMenuAction(action) {
+                this.showTyping(true);
+                
+                setTimeout(() => {
+                    this.showTyping(false);
+                    
+                    switch (action) {
+                        case 'calculate':
+                            this.startIMCCalculation();
+                            break;
+                        case 'documents':
+                            this.showDocumentsInfo();
+                            break;
+                        case 'pre-op':
+                            this.showPreOpInfo();
+                            break;
+                        case 'post-op':
+                            this.showPostOpInfo();
+                            break;
+                        case 'surgery-types':
+                            this.showSurgeryTypesInfo();
+                            break;
+                        case 'insurance':
+                            this.showInsuranceInfo();
+                            break;
+                    }
+                }, 800);
+            }
+            
+            startIMCCalculation() {
+                if (!this.hasCalculatedIMC) {
+                    this.conversationState = 'collecting_data';
+                    this.currentStep = 0;
+                    this.addMessage('Vou fazer algumas perguntas rápidas para calcular seu IMC e te dar orientações personalizadas! 😊', 'assistant');
+                    setTimeout(() => this.askCurrentQuestion(), 1000);
+                } else {
+                    this.recalculateIMC();
+                }
+            }
+            
+            recalculateIMC() {
+                const imc = this.calculateIMC();
+                const imcCategory = this.getIMCCategory(imc);
+                const ansInfo = this.getANSInfo(imc);
+                
+                this.addMessage(
+                    `Seu IMC atual é ${imc.toFixed(1)} (${imcCategory}). ${ansInfo}`,
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 1500);
+            }
+            
+            showDocumentsInfo() {
+                this.addMessage(
+                    '📋 **Documentos necessários:**\n\n' +
+                    '• **Relatório médico** detalhado\n' +
+                    '• **Exames solicitados** pela equipe\n' +
+                    '• **Comprovação de tentativas** anteriores de emagrecimento\n' +
+                    '• **Avaliações** psicológica e nutricional\n' +
+                    '• **Histórico médico** completo\n\n' +
+                    'Cada equipe pode ter exigências específicas!',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            showPreOpInfo() {
+                this.addMessage(
+                    '🏥 **Pré-operatório:**\n\n' +
+                    '• Seguir **orientações médicas** rigorosamente\n' +
+                    '• Realizar todos os **exames solicitados**\n' +
+                    '• Participar de **consultas multidisciplinares**\n' +
+                    '• Manter **acompanhamento psicológico**\n' +
+                    '• Preparar-se **mentalmente** para mudanças\n\n' +
+                    'É uma fase importante de preparação!',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            showPostOpInfo() {
+                this.addMessage(
+                    '💪 **Pós-operatório:**\n\n' +
+                    '• Seguir **dieta** orientada pela nutricionista\n' +
+                    '• Tomar **vitaminas** prescritas\n' +
+                    '• Fazer **exercícios** conforme liberação\n' +
+                    '• Manter **consultas regulares**\n' +
+                    '• Participar de **grupos de apoio**\n\n' +
+                    'Seu comprometimento é fundamental para o sucesso! 🌟',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            showSurgeryTypesInfo() {
+                this.addMessage(
+                    '🔬 **Tipos de cirurgia:**\n\n' +
+                    '• **Bypass Gástrico** - mais comum\n' +
+                    '• **Sleeve** (Manga Gástrica)\n' +
+                    '• **Banda Gástrica**\n' +
+                    '• **Duodenal Switch**\n\n' +
+                    'A escolha da técnica deve ser discutida com o cirurgião, que conhecerá seu caso e indicará a mais adequada! 👩‍⚕️',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            showInsuranceInfo() {
+                this.addMessage(
+                    '🏛️ **SUS/Plano de Saúde:**\n\n' +
+                    '**Pelo SUS:**\n' +
+                    '• Procure uma UBS para encaminhamento\n' +
+                    '• Tenha paciência com a fila de espera\n\n' +
+                    '**Pelo Plano:**\n' +
+                    '• Verifique se tem cobertura\n' +
+                    '• Reúna documentos exigidos\n' +
+                    '• Solicite autorização prévia\n\n' +
+                    'Cada caso tem suas particularidades!',
+                    'assistant'
+                );
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+                
+                this.addMessage(message, 'user');
+                this.chatInput.value = '';
+                this.sendButton.disabled = true;
+                
+                this.showTyping(true);
+                
+                setTimeout(() => {
+                    this.processMessage(message);
+                    this.showTyping(false);
+                }, 800);
+            }
+            
+            processMessage(message) {
+                if (this.conversationState === 'collecting_data') {
+                    this.processDataCollection(message);
+                    return;
+                }
+                
+                const lowerMessage = message.toLowerCase();
+                
+                // Verifica se está pedindo para voltar ao menu
+                if (lowerMessage.includes('menu') || lowerMessage.includes('opções') || lowerMessage.includes('voltar')) {
+                    this.addMessage('Aqui estão as opções disponíveis:', 'assistant');
+                    setTimeout(() => this.showMainMenu(), 500);
+                    return;
+                }
+                
+                // Outras respostas básicas
+                if (this.isGreeting(lowerMessage)) {
+                    this.addMessage('Olá! 👋 Fico feliz em te ajudar com informações sobre cirurgia bariátrica!', 'assistant');
+                    setTimeout(() => this.showMainMenu(), 1000);
+                    return;
+                }
+                
+                if (lowerMessage.includes('obrigad') || lowerMessage.includes('valeu') || lowerMessage.includes('tchau')) {
+                    this.addMessage('De nada! 😊 Sempre que precisar de informações sobre cirurgia bariátrica, estarei aqui. Cuide-se! 💙', 'assistant');
+                    return;
+                }
+                
+                // Resposta padrão
+                this.addMessage('Não entendi bem sua pergunta. Que tal escolher uma das opções do menu? 😊', 'assistant');
+                setTimeout(() => this.showMainMenu(), 1000);
+            }
+            
+            processDataCollection(message) {
+                const currentQuestion = this.questionFlow[this.currentStep];
+                
+                if (!currentQuestion) {
+                    this.finishDataCollection();
+                    return;
+                }
+                
+                const validation = this.validateResponse(currentQuestion.key, message);
+                
+                if (!validation.valid) {
+                    this.addMessage(validation.message, 'assistant');
+                    return;
+                }
+                
+                this.userData[currentQuestion.key] = validation.value;
+                this.currentStep++;
+                
+                this.skipQuestionsIfNeeded();
+                
+                if (this.currentStep < this.questionFlow.length) {
+                    setTimeout(() => this.askCurrentQuestion(), 800);
+                } else {
+                    setTimeout(() => this.finishDataCollection(), 800);
+                }
+            }
+            
+            skipQuestionsIfNeeded() {
+                while (this.currentStep < this.questionFlow.length) {
+                    const question = this.questionFlow[this.currentStep];
+                    
+                    if (question.condition === 'isPatient' && !this.userData.isPatient) {
+                        this.currentStep++;
+                        continue;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            validateResponse(key, message) {
+                const value = message.trim();
+                
+                switch (key) {
+                    case 'name':
+                        if (value.length < 2) {
+                            return { valid: false, message: 'Por favor, me diga um nome válido com pelo menos 2 letras.' };
+                        }
+                        return { valid: true, value: value };
+                        
+                    case 'isPatient':
+                        const lowerValue = value.toLowerCase();
+                        if (lowerValue.includes('sim') || lowerValue.includes('eu') || lowerValue.includes('para mim')) {
+                            return { valid: true, value: true };
+                        } else if (lowerValue.includes('não') || lowerValue.includes('nao') || lowerValue.includes('outra')) {
+                            return { valid: true, value: false };
+                        }
+                        return { valid: false, message: 'Responda: é você quem tem interesse na cirurgia ou para outra pessoa?' };
+                        
+                    case 'age':
+                        const age = parseInt(value);
+                        if (isNaN(age) || age < 16 || age > 100) {
+                            return { valid: false, message: 'Por favor, me diga uma idade válida entre 16 e 100 anos.' };
+                        }
+                        return { valid: true, value: age };
+                        
+                    case 'height':
+                        const height = parseFloat(value.replace(',', '.'));
+                        if (isNaN(height) || height < 1.30 || height > 2.20) {
+                            return { valid: false, message: 'Por favor, me diga sua altura em metros (exemplo: 1.70).' };
+                        }
+                        return { valid: true, value: height };
+                        
+                    case 'weight':
+                        const weight = parseFloat(value.replace(',', '.'));
+                        if (isNaN(weight) || weight < 40 || weight > 300) {
+                            return { valid: false, message: 'Por favor, me diga seu peso em quilos (exemplo: 85).' };
+                        }
+                        return { valid: true, value: weight };
+                        
+                    default:
+                        return { valid: true, value: value };
+                }
+            }
+            
+            askCurrentQuestion() {
+                const question = this.questionFlow[this.currentStep];
+                if (question) {
+                    this.addMessage(`${question.emoji} ${question.question}`, 'assistant');
+                }
+            }
+            
+            finishDataCollection() {
+                this.conversationState = 'helping';
+                this.hasCalculatedIMC = true;
+                
+                const name = this.userData.name;
+                
+                if (!this.userData.isPatient) {
+                    this.addMessage(
+                        `${name}, é importante que você saiba que todas as decisões sobre cirurgia bariátrica devem partir da própria pessoa interessada. ` +
+                        `Posso fornecer informações gerais, mas lembre-se: não é ético pressionar alguém a fazer qualquer procedimento cirúrgico. A decisão deve ser sempre pessoal! 💙`,
+                        'assistant'
+                    );
+                } else {
+                    const imc = this.calculateIMC();
+                    const imcCategory = this.getIMCCategory(imc);
+                    const ansInfo = this.getANSInfo(imc);
+                    
+                    this.
