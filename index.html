@@ -829,4 +829,88 @@
                     const imcCategory = this.getIMCCategory(imc);
                     const ansInfo = this.getANSInfo(imc);
                     
-                    this.
+                   this.addMessage(
+                        `${name}, seu IMC é ${imc.toFixed(1)} (${imcCategory}). ${ansInfo}`,
+                        'assistant'
+                    );
+                }
+                
+                setTimeout(() => this.showMainMenu(), 2000);
+            }
+            
+            calculateIMC() {
+                const { height, weight } = this.userData;
+                return weight / (height * height);
+            }
+            
+            getIMCCategory(imc) {
+                if (imc < 18.5) return 'Abaixo do peso';
+                if (imc < 25) return 'Peso normal';
+                if (imc < 30) return 'Sobrepeso';
+                if (imc < 35) return 'Obesidade grau I';
+                if (imc < 40) return 'Obesidade grau II';
+                return 'Obesidade grau III';
+            }
+            
+            getANSInfo(imc) {
+                if (imc >= 40) {
+                    return 'Segundo os critérios da ANS, você já se enquadra para cirurgia bariátrica! 🟢';
+                } else if (imc >= 35) {
+                    return 'Com IMC acima de 35, você pode se enquadrar para cirurgia se tiver comorbidades associadas (diabetes, hipertensão, apneia do sono, etc). Consulte um especialista! 🟡';
+                } else if (imc >= 30) {
+                    return 'Seu IMC indica obesidade grau I. A cirurgia geralmente não é indicada neste caso, mas é importante manter acompanhamento médico. 🔵';
+                } else {
+                    return 'Seu IMC não se enquadra nos critérios para cirurgia bariátrica. Mantenha hábitos saudáveis! 💙';
+                }
+            }
+            
+            isGreeting(message) {
+                const greetings = ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'hello', 'hi'];
+                return greetings.some(greeting => message.includes(greeting));
+            }
+            
+            addMessage(text, type = 'assistant') {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', type);
+                messageDiv.textContent = text;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            showTyping(show) {
+                this.typingIndicator.style.display = show ? 'block' : 'none';
+                if (show) {
+                    this.scrollToBottom();
+                }
+            }
+            
+            scrollToBottom() {
+                setTimeout(() => {
+                    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                }, 100);
+            }
+        }
+        
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new BarIAChat();
+        });
+        
+        // Adicionar alguns efeitos visuais extras
+        document.addEventListener('DOMContentLoaded', () => {
+            // Efeito de entrada suave
+            setTimeout(() => {
+                document.querySelector('.container').classList.add('loading');
+            }, 200);
+            
+            // Simulação de conexão com IA
+            setTimeout(() => {
+                const aiStatus = document.getElementById('aiStatus');
+                aiStatus.style.background = 'rgba(76, 175, 80, 0.9)';
+                aiStatus.innerHTML = '🟢 IA: CONECTADA';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
