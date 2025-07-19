@@ -597,82 +597,92 @@
             }
             
             showDocumentsInfo() {
-                this.addMessage(
-                    '📋 Documentos necessários:\n\n' +
-                    
-                    '• Relatório médico detalhado\n' +
-                    '• Exames solicitados pela equipe\n' +
-                    '• Comprovação de tentativas anteriores de emagrecimento\n' +
-                    '• Avaliações psicológica e nutricional\n' +
-                    '• Histórico médico completo\n\n' +
-                    
-                    'Cada equipe pode ter exigências específicas!',
-                    'assistant'
-                );
-                
-                setTimeout(() => this.showMainMenu(), 2000);
-            }
-            
-            showPreOpInfo() {
-                this.addMessage(
-                    '🏥 Pré-operatório:\n\n' +
-                    '• Seguir orientações médicas rigorosamente\n' +
-                    '• Realizar todos os exames solicitados\n' +
-                    '• Participar de consultas multidisciplinares\n' +
-                    '• Manter acompanhamento psicológico\n' +
-                    '• Preparar-se mentalmente para mudanças\n\n' +
-                    'É uma fase importante de preparação!',
-                    'assistant'
-                );
-                
-                setTimeout(() => this.showMainMenu(), 2000);
-            }
-            
-            showPostOpInfo() {
-                this.addMessage(
-                    '💪 Pós-operatório:\n\n' +
-                    '• Seguir uma dieta orientada pelo nutricionista\n' +
-                    '• Tomar vitaminas prescritas\n' +
-                    '• Fazer exercícios conforme liberação\n' +
-                    '• Manter consultas regulares\n' +
-                    '• Participar de grupos de apoio\n\n' +
-                    'Seu comprometimento é fundamental para o sucesso! 🌟',
-                    'assistant'
-                );
-                
-                setTimeout(() => this.showMainMenu(), 2000);
-            }
-            
-            showSurgeryTypesInfo() {
-                this.addMessage(
-                    '🔬 Tipos de cirurgia:\n\n' +
-                    '• Bypass Gástrico- mais comum\n' +
-                    '• Sleeve (Manga Gástrica)\n' +
-                    '• Banda Gástrica\n' +
-                    '• Duodenal Switch\n\n' +
-                    'A escolha da técnica deve ser discutida com o cirurgião, que conhecerá seu caso e indicará a mais adequada! 👩‍⚕️',
-                    'assistant'
-                );
-                
-                setTimeout(() => this.showMainMenu(), 2000);
-            }
-            
-            showInsuranceInfo() {
-                this.addMessage(
-                    '🏛️ SUS/Plano de Saúde:\n\n' +
-                    ' -Pelo SUS:\n' +
-                    '• Procure uma UBS para encaminhamento\n' +
-                    '• Tenha paciência com a fila de espera\n\n' +
-                    ' -Pelo Plano:\n' +
-                    '• Verifique se tem cobertura\n' +
-                    '• Reúna documentos exigidos\n' +
-                    '• Solicite autorização prévia\n\n' +
-                    'Cada caso tem suas particularidades!',
-                    'assistant'
-                );
-                
-                setTimeout(() => this.showMainMenu(), 2000);
-            }
+    this.addMessage(
+        '📋 Documentos necessários:<br><br>' +
+        '<ul>' +
+        '<li>Relatório médico detalhado</li>' +
+        '<li>Exames solicitados pela equipe</li>' +
+        '<li>Comprovação de tentativas anteriores de emagrecimento</li>' +
+        '<li>Avaliações psicológica e nutricional</li>' +
+        '<li>Histórico médico completo</li>' +
+        '</ul>' +
+        'Cada equipe pode ter exigências específicas!',
+        'assistant'
+    );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
+
+showPreOpInfo() {
+    this.addMessage(
+        '🏥 Pré-operatório:<br><br>' +
+        '<ul>' +
+        '<li>Seguir orientações médicas rigorosamente</li>' +
+        '<li>Realizar todos os exames solicitados</li>' +
+        '<li>Participar de consultas multidisciplinares</li>' +
+        '<li>Manter acompanhamento psicológico</li>' +
+        '<li>Preparar-se mentalmente para mudanças</li>' +
+        '</ul>' +
+        'É uma fase importante de preparação!',
+        'assistant'
+    );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
+
+showPostOpInfo() {
+    this.addMessage(
+        '💪 Pós-operatório:<br><br>' +
+        '<ul>' +
+        '<li>Seguir uma dieta orientada pelo nutricionista</li>' +
+        '<li>Tomar vitaminas prescritas</li>' +
+        '<li>Fazer exercícios conforme liberação</li>' +
+        '<li>Manter consultas regulares</li>' +
+        '<li>Participar de grupos de apoio</li>' +
+        '</ul>' +
+        'Seu comprometimento é fundamental para o sucesso! 🌟',
+        'assistant'
+    );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
+
+showSurgeryTypesInfo() {
+    this.addMessage(
+        '🔬 Tipos de cirurgia:<br><br>' +
+        '<ul>' +
+        '<li>Bypass Gástrico - mais comum</li>' +
+        '<li>Sleeve (Manga Gástrica)</li>' +
+        '<li>Banda Gástrica</li>' +
+        '<li>Duodenal Switch</li>' +
+        '</ul>' +
+        'A escolha da técnica deve ser discutida com o cirurgião, que conhecerá seu caso e indicará a mais adequada! 👩‍⚕️',
+        'assistant'
+    );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
+
+showInsuranceInfo() {
+    this.addMessage(
+        '🏛️ SUS/Plano de Saúde:<br><br>' +
+        '<strong>Pelo SUS:</strong>' +
+        '<ul>' +
+        '<li>Procure uma UBS para encaminhamento</li>' +
+        '<li>Tenha paciência com a fila de espera</li>' +
+        '</ul>' +
+        '<strong>Pelo Plano:</strong>' +
+        '<ul>' +
+        '<li>Verifique se tem cobertura</li>' +
+        '<li>Reúna documentos exigidos</li>' +
+        '<li>Solicite autorização prévia</li>' +
+        '</ul>' +
+        'Cada caso tem suas particularidades!',
+        'assistant'
+    );
+    
+    setTimeout(() => this.showMainMenu(), 2000);
+}
             
             async sendMessage() {
                 const message = this.chatInput.value.trim();
