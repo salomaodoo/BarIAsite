@@ -85,16 +85,6 @@
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        .knowledge-indicator {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 15px;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-
         .right-section {
             display: flex;
             flex-direction: column;
@@ -156,11 +146,6 @@
             margin-right: auto;
         }
 
-        .message.assistant.enhanced {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(232, 245, 255, 0.95) 100%);
-            border-left: 4px solid #2a5298;
-        }
-
         .message.system {
             background: rgba(255, 193, 7, 0.2);
             color: #fff;
@@ -176,16 +161,6 @@
             border: 1px solid rgba(244, 67, 54, 0.5);
             max-width: 100%;
             text-align: center;
-        }
-
-        .knowledge-source {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-            color: #2a5298;
-            font-style: italic;
         }
 
         .options-menu {
@@ -329,10 +304,6 @@
             background: rgba(76, 175, 80, 0.9);
         }
 
-        .ai-status.enhanced {
-            background: rgba(63, 81, 181, 0.9);
-        }
-
         .loading-message {
             background: rgba(255, 255, 255, 0.95);
             color: #333;
@@ -404,22 +375,19 @@
                 Sua assistente inteligente especializada em cirurgia bariátrica. 
                 Tire dúvidas e receba orientações personalizadas com IA.
             </p>
-            <div class="knowledge-indicator" id="knowledgeStatus" style="display: none;">
-                🧠 Base de conhecimento ativa
-            </div>
         </div>
 
         <div class="right-section">
             <div class="chat-header">
                 <h2>Chat com IA</h2>
-                <p>Powered by GroqCloud + Base de Conhecimento</p>
+                <p>Powered by GroqCloud</p>
             </div>
             
             <div class="chat-container">
                 <div class="chat-messages" id="chatMessages">
                     <div class="loading-message">
                         <h3>🚀 Carregando BarIA...</h3>
-                        <p>Configurando sua assistente inteligente e base de conhecimento...</p>
+                        <p>Configurando sua assistente inteligente...</p>
                     </div>
                 </div>
                 
@@ -457,50 +425,41 @@
                 this.sendButton = document.getElementById('sendButton');
                 this.typingIndicator = document.getElementById('typingIndicator');
                 this.aiStatus = document.getElementById('aiStatus');
-                this.knowledgeStatus = document.getElementById('knowledgeStatus');
                 this.conversationHistory = [];
-                this.knowledgeBaseActive = false;
                 
                 this.systemPrompt = `Você é a BarIA, uma assistente especializada em cirurgia bariátrica no Brasil. 
 
 REGRAS IMPORTANTES:
-- SEMPRE seja concisa: máximo 3-4 parágrafos por resposta
-- Vá direto ao ponto principal da pergunta
-- Use bullet points quando apropriado para organizar informações
 - Sempre seja empática e acolhedora
 - Forneça informações precisas sobre cirurgia bariátrica
-- PRIORIZE informações da sua base de conhecimento quando disponível
 - Mencione sempre que informações médicas devem ser confirmadas com profissionais
 - Use emojis moderadamente para tornar a conversa mais amigável
 - Responda em português brasileiro
 - Se não souber algo específico, seja honesta sobre limitações
 - Incentive sempre o acompanhamento médico especializado
 
-QUANDO RECEBER INFORMAÇÕES DA BASE DE CONHECIMENTO:
-- Use essas informações como fonte principal para sua resposta
-- Seja mais específica e detalhada usando os dados fornecidos
-- Mantenha a linguagem acessível mesmo com informações técnicas
-- Confirme que as informações são baseadas em diretrizes atuais
+TÓPICOS QUE VOCÊ DOMINA:
+- Critérios para cirurgia bariátrica (IMC, comorbidades)
+- Tipos de cirurgia (bypass, sleeve, etc.)
+- Processo pelo SUS e planos de saúde
+- Pré e pós-operatório
+- Documentação necessária
+- Orientações nutricionais gerais
+- Aspectos psicológicos
 
-FORMATO DE RESPOSTA:
-- 1º parágrafo: resposta direta e principal
-- 2º parágrafo: informação complementar importante (se necessário)
-- 3º parágrafo: orientação médica/próximos passos
-- Máximo 150-200 palavras por resposta
-
-Seja sempre clara, precisa, empática e CONCISA nas respostas.`;
+Seja sempre clara, precisa e empática nas respostas.`;
                 
                 this.init();
             }
             
             async init() {
                 await this.loadAPIKey();
-                await this.testKnowledgeBase();
                 this.setupEventListeners();
             }
             
             async loadAPIKey() {
                 try {
+                    // Primeiro tenta via função Netlify
                     const response = await fetch('/.netlify/functions/api-proxy', {
                         method: 'POST',
                         headers: {
@@ -520,30 +479,8 @@ Seja sempre clara, precisa, empática e CONCISA nas respostas.`;
                     }
                 } catch (error) {
                     console.error('Erro ao carregar API key:', error);
+                    // Fallback: mostra interface de configuração manual
                     this.showManualConfig();
-                }
-            }
-
-            async testKnowledgeBase() {
-                try {
-                    const response = await fetch('/.netlify/functions/api-proxy', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            action: 'search-knowledge',
-                            query: 'test'
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        this.knowledgeBaseActive = true;
-                        this.knowledgeStatus.style.display = 'block';
-                        console.log('✅ Base de conhecimento ativa');
-                    }
-                } catch (error) {
-                    console.warn('⚠️ Base de conhecimento não disponível:', error);
                 }
             }
             
@@ -554,78 +491,79 @@ Seja sempre clara, precisa, empática e CONCISA nas respostas.`;
                         <p>A configuração automática falhou. Você pode inserir sua chave da API Groq manualmente:</p>
                         <br>
                         <input type="password" id="manualApiKey" placeholder="Cole sua chave da API Groq aqui..." 
-                               style="width: 100%; padding: 10px; border-radius: 8px; margin: 10px 0; color: #333;">
-                        <br>
-                        <button class="config-button" onclick="bariaApp.setManualApiKey()" style="background: #2a5298; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin: 5px;">Configurar API</button>
-                        <button class="config-button" onclick="bariaApp.showDemo()" style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin: 5px;">Ver Demo (sem API)</button>
+                               style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd;">
+                        <button onclick="chatApp.setManualApiKey()" 
+                                style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">
+                            Configurar Chat
+                        </button>
                         <br><br>
-                        <small>📋 Para obter sua chave: visite <strong>console.groq.com</strong>, faça login e gere uma API key gratuita.</small>
+                        <p><strong>Como obter sua chave:</strong></p>
+                        <p>1. Visite <a href="https://console.groq.com" target="_blank" style="color: #4CAF50;">console.groq.com</a></p>
+                        <p>2. Faça login/cadastre-se (é gratuito)</p>
+                        <p>3. Vá em "API Keys" e crie uma nova chave</p>
+                        <p>4. Cole a chave acima e clique em "Configurar Chat"</p>
                     </div>
                 `;
-            }
-
-            setManualApiKey() {
-                const keyInput = document.getElementById('manualApiKey');
-                const key = keyInput.value.trim();
                 
-                if (key && key.startsWith('gsk_')) {
-                    this.apiKey = key;
-                    this.initializeChat();
-                } else {
-                    alert('⚠️ Por favor, insira uma chave de API válida (deve começar com "gsk_")');
-                }
-            }
-
-            showDemo() {
-                this.initializeChat(true);
+                this.aiStatus.textContent = '🔧 Configuração necessária';
+                this.aiStatus.style.background = 'rgba(255, 152, 0, 0.9)';
             }
             
-            initializeChat(demoMode = false) {
-                this.chatMessages.innerHTML = '';
+            setManualApiKey() {
+                const apiKeyInput = document.getElementById('manualApiKey');
+                const apiKey = apiKeyInput.value.trim();
                 
-                if (demoMode) {
-                    this.updateAIStatus('🎭 Modo Demo', 'demo');
-                    this.addMessage('system', '🎭 <strong>Modo Demo Ativo</strong><br>As respostas são simuladas para demonstração. Para usar a IA real, configure sua API key do Groq.');
-                } else {
-                    this.updateAIStatus('🤖 BarIA Online', 'connected');
+                if (!apiKey) {
+                    alert('Por favor, insira uma chave de API válida.');
+                    return;
                 }
                 
-                const welcomeMessage = `Olá! 👋 Sou a BarIA, sua assistente especializada em cirurgia bariátrica. 
-
-Posso ajudar você com informações sobre:
-- Tipos de cirurgia bariátrica
-- Preparação pré-operatória  
-- Cuidados pós-operatórios
-- Alimentação e suplementação
-- Dúvidas sobre o procedimento
-
-Como posso ajudar você hoje? 😊`;
+                if (!apiKey.startsWith('gsk_')) {
+                    alert('A chave da API Groq deve começar com "gsk_". Verifique se copiou corretamente.');
+                    return;
+                }
                 
-                this.addMessage('assistant', welcomeMessage);
+                this.apiKey = apiKey;
+                this.initializeChat();
+            }
+            
+            initializeChat() {
+                this.chatMessages.innerHTML = '';
+                this.addMessage('Olá! 👋 Sou a BarIA, sua assistente especializada em cirurgia bariátrica. Como posso ajudá-lo hoje?', 'system');
                 this.showQuickOptions();
                 
                 this.chatInput.disabled = false;
-                this.sendButton.disabled = false;
                 this.chatInput.placeholder = 'Digite sua pergunta sobre cirurgia bariátrica...';
+                this.sendButton.disabled = false;
+                
+                this.aiStatus.textContent = '🤖 BarIA Online';
+                this.aiStatus.classList.add('connected');
+                
                 this.chatInput.focus();
             }
             
             showQuickOptions() {
                 const optionsHtml = `
                     <div class="options-menu">
-                        <h3>💡 Perguntas Frequentes:</h3>
+                        <h3>💡 Perguntas frequentes:</h3>
                         <div class="option-buttons">
-                            <button class="option-btn" onclick="bariaApp.askQuestion('Quais são os tipos de cirurgia bariátrica?')">
-                                🔍 Tipos de Cirurgia
+                            <button class="option-btn" onclick="chatApp.askQuestion('Quais são os critérios para cirurgia bariátrica?')">
+                                📋 Critérios para cirurgia
                             </button>
-                            <button class="option-btn" onclick="bariaApp.askQuestion('Como é o pré-operatório?')">
-                                📋 Preparação Pré-Op
+                            <button class="option-btn" onclick="chatApp.askQuestion('Tipos de cirurgia bariátrica disponíveis')">
+                                🔬 Tipos de cirurgia
                             </button>
-                            <button class="option-btn" onclick="bariaApp.askQuestion('Cuidados pós-operatórios')">
-                                🏥 Pós-Operatório
+                            <button class="option-btn" onclick="chatApp.askQuestion('Como fazer cirurgia bariátrica pelo SUS?')">
+                                🏥 Cirurgia pelo SUS
                             </button>
-                            <button class="option-btn" onclick="bariaApp.askQuestion('Alimentação após a cirurgia')">
-                                🥗 Alimentação
+                            <button class="option-btn" onclick="chatApp.askQuestion('Cuidados no pré-operatório')">
+                                📝 Pré-operatório
+                            </button>
+                            <button class="option-btn" onclick="chatApp.askQuestion('Alimentação após cirurgia bariátrica')">
+                                🥗 Alimentação pós-cirurgia
+                            </button>
+                            <button class="option-btn" onclick="chatApp.askQuestion('Acompanhamento psicológico na bariátrica')">
+                                🧠 Apoio psicológico
                             </button>
                         </div>
                     </div>
@@ -635,99 +573,49 @@ Como posso ajudar você hoje? 😊`;
             }
             
             setupEventListeners() {
-                this.sendButton.addEventListener('click', () => {
-                    this.sendMessage();
-                });
-                
                 this.chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
+                    if (e.key === 'Enter' && !this.sendButton.disabled) {
                         this.sendMessage();
                     }
                 });
                 
-                this.chatInput.addEventListener('input', () => {
-                    const message = this.chatInput.value.trim();
-                    this.sendButton.disabled = !message || message.length < 2;
+                this.sendButton.addEventListener('click', () => {
+                    if (!this.sendButton.disabled) {
+                        this.sendMessage();
+                    }
                 });
+            }
+            
+            async askQuestion(question) {
+                this.chatInput.value = question;
+                await this.sendMessage();
             }
             
             async sendMessage() {
                 const message = this.chatInput.value.trim();
-                if (!message) return;
+                if (!message || !this.apiKey) return;
                 
-                this.addMessage('user', message);
+                this.addMessage(message, 'user');
                 this.chatInput.value = '';
-                this.sendButton.disabled = true;
                 this.showTyping();
                 
                 try {
-                    let knowledgeContext = '';
-                    
-                    if (this.knowledgeBaseActive) {
-                        knowledgeContext = await this.searchKnowledgeBase(message);
-                    }
-                    
-                    const response = await this.getAIResponse(message, knowledgeContext);
+                    const response = await this.callGroqAPI(message);
                     this.hideTyping();
-                    this.addMessage('assistant', response, this.knowledgeBaseActive);
-                    
+                    this.addMessage(response, 'assistant');
                 } catch (error) {
+                    console.error('Erro na API:', error);
                     this.hideTyping();
-                    console.error('Erro ao obter resposta:', error);
-                    
-                    if (error.message.includes('401')) {
-                        this.addMessage('error', '🔑 <strong>Erro de Autenticação</strong><br>Sua chave de API parece estar inválida. Verifique se foi copiada corretamente.');
-                    } else if (error.message.includes('quota')) {
-                        this.addMessage('error', '📊 <strong>Limite Excedido</strong><br>Você atingiu o limite da sua API key. Aguarde ou use uma nova chave.');
-                    } else {
-                        this.addMessage('error', '⚠️ <strong>Erro de Conexão</strong><br>Não foi possível conectar com a IA. Tente novamente em alguns momentos.');
-                    }
-                }
-                
-                this.sendButton.disabled = false;
-            }
-            
-            async searchKnowledgeBase(query) {
-                try {
-                    const response = await fetch('/.netlify/functions/api-proxy', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            action: 'search-knowledge',
-                            query: query
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.results && data.results.length > 0) {
-                            return data.results.map(item => item.content).join('\n\n');
-                        }
-                    }
-                    return '';
-                } catch (error) {
-                    console.warn('Erro ao buscar na base de conhecimento:', error);
-                    return '';
+                    this.addMessage('Desculpe, ocorreu um erro. Tente novamente em alguns momentos. 😔', 'error');
                 }
             }
             
-            async getAIResponse(message, knowledgeContext = '') {
-                if (!this.apiKey || this.aiStatus.textContent.includes('Demo')) {
-                    return this.getDemoResponse(message);
-                }
-                
-                let enhancedPrompt = this.systemPrompt;
-                if (knowledgeContext) {
-                    enhancedPrompt += `\n\nCONTEXTO DA BASE DE CONHECIMENTO:\n${knowledgeContext}\n\nUse essas informações para responder com mais precisão e detalhe.`;
-                }
+            async callGroqAPI(userMessage) {
+                this.conversationHistory.push({ role: 'user', content: userMessage });
                 
                 const messages = [
-                    { role: 'system', content: enhancedPrompt },
-                    ...this.conversationHistory.slice(-6),
-                    { role: 'user', content: message }
+                    { role: 'system', content: this.systemPrompt },
+                    ...this.conversationHistory.slice(-10) // Mantém últimas 10 mensagens para contexto
                 ];
                 
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -737,103 +625,63 @@ Como posso ajudar você hoje? 😊`;
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: 'mixtral-8x7b-32768',
+                        model: 'llama-3.1-8b-instant',
                         messages: messages,
                         temperature: 0.7,
-                        max_tokens: 800,
-                        top_p: 0.9
+                        max_tokens: 1000,
+                        stream: false
                     })
                 });
                 
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        throw new Error('Erro 401: API key inválida');
-                    } else if (response.status === 429) {
-                        throw new Error('Erro 429: Limite de quota excedido');
-                    }
-                    throw new Error(`Erro HTTP: ${response.status}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Erro desconhecido'}`);
                 }
                 
                 const data = await response.json();
-                const aiResponse = data.choices[0].message.content;
+                const assistantResponse = data.choices[0].message.content;
                 
-                this.conversationHistory.push(
-                    { role: 'user', content: message },
-                    { role: 'assistant', content: aiResponse }
-                );
+                this.conversationHistory.push({ role: 'assistant', content: assistantResponse });
                 
-                return aiResponse;
+                return assistantResponse;
             }
             
-            getDemoResponse(message) {
-                const demoResponses = {
-                    'tipos': '🔍 **Principais tipos de cirurgia bariátrica:**\n\n• **Bypass Gástrico**: Reduz o estômago e desvia o intestino\n• **Sleeve (Manga Gástrica)**: Remove parte do estômago\n• **Banda Gástrica**: Coloca uma banda ajustável no estômago\n\nCada tipo tem indicações específicas. É importante conversar com seu cirurgião para escolher a melhor opção para seu caso! 😊',
-                    'pre': '📋 **Preparação pré-operatória essencial:**\n\n• Avaliação multidisciplinar completa\n• Exames laboratoriais e de imagem\n• Perda de peso pré-operatória (se necessário)\n• Acompanhamento psicológico\n\nO período preparatório é fundamental para o sucesso da cirurgia. Siga todas as orientações da sua equipe médica! 💪',
-                    'pos': '🏥 **Cuidados pós-operatórios importantes:**\n\n• Dieta líquida progredindo gradualmente\n• Suplementação vitamínica obrigatória\n• Exercícios leves iniciais\n• Acompanhamento médico regular\n\nA recuperação é um processo gradual. Tenha paciência e siga todas as orientações! 🌟',
-                    'alimentacao': '🥗 **Alimentação pós-bariátrica:**\n\n• Refeições pequenas e frequentes\n• Mastigar bem e comer devagar\n• Proteína como prioridade\n• Hidratação adequada entre as refeições\n\nA nutricionista será sua melhor aliada nessa jornada! 💚'
-                };
-                
-                const lowerMessage = message.toLowerCase();
-                for (const [key, response] of Object.entries(demoResponses)) {
-                    if (lowerMessage.includes(key)) {
-                        return response;
-                    }
-                }
-                
-                return '🎭 **Modo Demo Ativo** - Esta é uma resposta simulada.\n\n' +
-                       'Para receber respostas personalizadas da IA, configure sua chave da API Groq. ' +
-                       'Posso ajudar com informações sobre cirurgia bariátrica, preparação, pós-operatório e muito mais! 😊';
-            }
-            
-            askQuestion(question) {
-                this.chatInput.value = question;
-                this.sendMessage();
-            }
-            
-            addMessage(type, content, enhanced = false) {
+            addMessage(text, type) {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${type}${enhanced ? ' enhanced' : ''}`;
-                
-                if (type === 'assistant' && enhanced) {
-                    content += '<div class="knowledge-source">💡 Resposta aprimorada com base de conhecimento</div>';
-                }
-                
-                messageDiv.innerHTML = content.replace(/\n/g, '<br>');
+                messageDiv.className = `message ${type}`;
+                messageDiv.innerHTML = this.formatMessage(text);
                 this.chatMessages.appendChild(messageDiv);
                 this.scrollToBottom();
             }
             
+            formatMessage(text) {
+                // Formatação básica de markdown
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>');
+            }
+            
             showTyping() {
                 this.typingIndicator.style.display = 'block';
+                this.sendButton.disabled = true;
                 this.scrollToBottom();
             }
             
             hideTyping() {
                 this.typingIndicator.style.display = 'none';
-            }
-            
-            updateAIStatus(text, className = '') {
-                this.aiStatus.textContent = text;
-                this.aiStatus.className = `ai-status ${className}`;
+                this.sendButton.disabled = false;
             }
             
             scrollToBottom() {
-                setTimeout(() => {
-                    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-                }, 100);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
             }
         }
         
-        // Initialize the app
-        const bariaApp = new BarIAGroq();
-        
-        // Global error handler
-        window.addEventListener('error', (e) => {
-            console.error('Erro global:', e.error);
-        });
-        
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('Promise rejeitada:', e.reason);
+        // Inicializa o chat quando a página carregar
+        let chatApp;
+        document.addEventListener('DOMContentLoaded', () => {
+            chatApp = new BarIAGroq();
         });
     </script>
 </body>
