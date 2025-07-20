@@ -1,0 +1,44 @@
+{
+  "criterios_cirurgia": {
+    "titulo": "Critérios para Cirurgia Bariátrica",
+    "conteudo": "A cirurgia bariátrica é indicada para pacientes com IMC ≥ 40 kg/m² ou IMC ≥ 35 kg/m² com comorbidades como diabetes tipo 2, hipertensão arterial, apneia do sono, dislipidemia ou artropatias. O paciente deve ter entre 16 e 65 anos, ter tentado tratamento clínico por pelo menos 2 anos sem sucesso, não ter dependência de álcool ou drogas, e ter condições psicológicas adequadas.",
+    "tags": ["criterios", "imc", "requisitos", "indicacao"],
+    "categoria": "indicacoes"
+  },
+  "tipos_cirurgia": {
+    "titulo": "Tipos de Cirurgia Bariátrica",
+    "conteudo": "As principais técnicas são: 1) Bypass Gástrico (Gastroplastia com derivação intestinal) - mais eficaz para diabetes, perda de 70-80% do excesso de peso; 2) Sleeve Gástrico (Gastrectomia vertical) - remove 80% do estômago, perda de 60-70% do excesso de peso; 3) Banda Gástrica Ajustável - menos invasiva, perda de 50-60% do excesso de peso. A escolha depende do perfil do paciente e avaliação médica.",
+    "tags": ["bypass", "sleeve", "banda", "tecnicas"],
+    "categoria": "procedimentos"
+  },
+  "sus_processo": {
+    "titulo": "Como fazer Cirurgia Bariátrica pelo SUS",
+    "conteudo": "Para fazer pelo SUS: 1) Consulte um clínico geral na UBS com exames (hemograma, glicemia, colesterol); 2) Obtenha encaminhamento para endocrinologista; 3) Faça acompanhamento por 2 anos com tentativas de tratamento clínico; 4) Solicite encaminhamento para cirurgião bariátrico; 5) Realize avaliações multidisciplinares (nutricional, psicológica, cardiológica); 6) Entre na fila cirúrgica. O processo pode levar 2-4 anos dependendo da região.",
+    "tags": ["sus", "fila", "encaminhamento", "processo"],
+    "categoria": "acesso"
+  },
+  "pre_operatorio": {
+    "titulo": "Cuidados no Pré-operatório",
+    "conteudo": "Preparação inclui: avaliação nutricional com dieta pré-operatória (geralmente 2 semanas antes), avaliação psicológica, exames cardiológicos e pneumológicos, endoscopia digestiva, ultrassom abdominal. É necessário parar de fumar pelo menos 8 semanas antes, suspender alguns medicamentos conforme orientação médica, e fazer jejum de 8-12 horas antes da cirurgia. Acompanhamento multidisciplinar é essencial.",
+    "tags": ["preparo", "exames", "dieta", "avaliacoes"],
+    "categoria": "cuidados"
+  },
+  "pos_operatorio_alimentacao": {
+    "titulo": "Alimentação após Cirurgia Bariátrica",
+    "conteudo": "A alimentação pós-cirúrgica segue fases: 1ª semana - líquidos claros; 2ª-3ª semana - líquidos completos e pastosos; 4ª-6ª semana - alimentos macios; após 2º mês - alimentação normal progressiva. Regras importantes: comer devagar, mastigar bem, pequenas quantidades (60-80ml inicialmente), não beber líquidos durante refeições, priorizar proteínas, tomar suplementos vitamínicos. Evitar açúcares, frituras e bebidas gaseificadas.",
+    "tags": ["alimentacao", "dieta", "fases", "pos", "nutricao"],
+    "categoria": "pos_operatorio"
+  },
+  "acompanhamento_psicologico": {
+    "titulo": "Apoio Psicológico na Cirurgia Bariátrica",
+    "conteudo": "O acompanhamento psicológico é obrigatório antes e após a cirurgia. Objetivos: avaliar motivação e expectativas realistas, identificar transtornos alimentares ou psiquiátricos, preparar para mudanças comportamentais. No pós-operatório, ajuda com adaptação à nova imagem corporal, mudanças de relacionamento, possível ansiedade ou depressão. Grupos de apoio são muito benéficos. O suporte psicológico aumenta significativamente o sucesso da cirurgia.",
+    "tags": ["psicologia", "apoio", "comportamento", "adaptacao"],
+    "categoria": "cuidados"
+  },
+  "comorbidades": {
+    "titulo": "Comorbidades que indicam Cirurgia Bariátrica",
+    "conteudo": "Principais comorbidades que indicam cirurgia com IMC ≥35: Diabetes mellitus tipo 2 (resolução em 80% dos casos), hipertensão arterial sistêmica, dislipidemia, apneia obstrutiva do sono, artropatias (artrose de joelhos/quadris), refluxo gastroesofágico, síndrome metabólica, infertilidade relacionada ao peso, incontinência urinária de esforço. A cirurgia pode resolver ou melhorar significativamente essas condições.",
+    "tags": ["diabetes", "hipertensao", "apneia", "artrose", "comorbidades"],
+    "categoria": "indicacoes"
+  }
+}
